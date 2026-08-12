@@ -1,0 +1,1636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Work & Project Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F5F6F2; --bg-elevated:#FFFFFF; --bg-sunken:#ECEEE9;
+  --ink:#16211C; --ink-soft:#4B5750; --ink-faint:#7C8983;
+  --border:#DADFD9; --border-soft:#E7EAE4;
+  --primary:#2F6F5E; --primary-ink:#FFFFFF; --primary-soft:#E4EEE9;
+  --accent:#C77B4A; --accent-soft:#F5E4D8;
+  --green:#3F8F5F; --green-soft:#E1F0E5;
+  --blue:#3B6FA0; --blue-soft:#E1EAF3;
+  --amber:#B9821F; --amber-soft:#F7EAD2;
+  --red:#C1483D; --red-soft:#F6E0DD;
+  --grey:#8B9490; --grey-soft:#EBEDE9;
+  --shadow:0 1px 2px rgba(22,33,28,0.06), 0 4px 14px rgba(22,33,28,0.06);
+  --shadow-lg:0 10px 40px rgba(22,33,28,0.18);
+  --radius:14px; --radius-sm:9px;
+  --font-display:'Fraunces', Georgia, serif;
+  --font-body:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono:'IBM Plex Mono', 'SFMono-Regular', Menlo, monospace;
+}
+[data-theme="dark"]{
+  --bg:#0F1613; --bg-elevated:#182019; --bg-sunken:#0B100D;
+  --ink:#EBF1EC; --ink-soft:#AAB6AE; --ink-faint:#7E8B84;
+  --border:#28352D; --border-soft:#202B24;
+  --primary:#5BB69A; --primary-ink:#0B1512; --primary-soft:#17332B;
+  --accent:#E39A67; --accent-soft:#332619;
+  --green:#54B27C; --green-soft:#122A1C;
+  --blue:#77A9DE; --blue-soft:#132433;
+  --amber:#E0B355; --amber-soft:#332A12;
+  --red:#E1837A; --red-soft:#331917;
+  --grey:#8C9791; --grey-soft:#1B2320;
+  --shadow:0 1px 2px rgba(0,0,0,0.3), 0 4px 20px rgba(0,0,0,0.35);
+  --shadow-lg:0 20px 60px rgba(0,0,0,0.55);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--font-body);
+  font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+h1,h2,h3,h4{font-family:var(--font-display); font-weight:600; margin:0; letter-spacing:-0.01em;}
+button, input, select, textarea{font-family:inherit; font-size:inherit; color:inherit;}
+button{cursor:pointer;}
+a{color:var(--primary);}
+.mono{font-family:var(--font-mono);}
+.hidden{display:none !important;}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);}
+
+/* ---------- Layout shell ---------- */
+#app{display:flex; min-height:100vh;}
+.sidebar{
+  width:230px; flex-shrink:0; background:var(--bg-elevated); border-right:1px solid var(--border);
+  display:flex; flex-direction:column; position:sticky; top:0; height:100vh; overflow-y:auto;
+}
+.brand{padding:22px 20px 14px; display:flex; align-items:center; gap:10px;}
+.brand-mark{
+  width:34px; height:34px; border-radius:9px; background:linear-gradient(155deg, var(--primary), var(--accent));
+  display:flex; align-items:center; justify-content:center; color:#fff; font-family:var(--font-display); font-weight:700; font-size:16px; flex-shrink:0;
+}
+.brand h1{font-size:17px; line-height:1.2;}
+.brand span{display:block; font-size:11px; color:var(--ink-faint); font-family:var(--font-body); font-weight:500; margin-top:1px;}
+nav.viewnav{padding:6px 12px; display:flex; flex-direction:column; gap:2px;}
+.view-btn{
+  display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%;
+  padding:9px 12px; border:none; background:transparent; border-radius:var(--radius-sm); text-align:left;
+  color:var(--ink-soft); font-weight:500; font-size:13.5px; transition:background .15s, color .15s;
+}
+.view-btn:hover{background:var(--bg-sunken); color:var(--ink);}
+.view-btn.active{background:var(--primary-soft); color:var(--primary); font-weight:600;}
+.view-btn .count{font-family:var(--font-mono); font-size:11px; background:var(--grey-soft); color:var(--ink-soft); padding:1px 7px; border-radius:20px;}
+.view-btn.active .count{background:var(--primary); color:var(--primary-ink);}
+.view-btn .count.warn{background:var(--red); color:#fff;}
+.sidebar-section-label{font-size:10.5px; text-transform:uppercase; letter-spacing:.07em; color:var(--ink-faint); padding:16px 20px 4px; font-weight:600;}
+.sidebar-foot{margin-top:auto; padding:14px; display:flex; flex-direction:column; gap:6px; border-top:1px solid var(--border);}
+.icon-btn-row{display:flex; gap:6px;}
+
+.main{flex:1; min-width:0; display:flex; flex-direction:column;}
+.topbar{
+  position:sticky; top:0; z-index:20; background:var(--bg); border-bottom:1px solid var(--border);
+  padding:14px 24px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+}
+.topbar h2{font-size:20px; flex:0 0 auto; margin-right:4px;}
+.search-wrap{position:relative; flex:1; min-width:180px; max-width:360px;}
+.search-wrap input{
+  width:100%; padding:9px 12px 9px 34px; border-radius:20px; border:1px solid var(--border);
+  background:var(--bg-elevated); color:var(--ink);
+}
+.search-wrap svg{position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--ink-faint);}
+.spacer{flex:1;}
+
+.content{padding:20px 24px 60px; max-width:1180px; width:100%; margin:0 auto;}
+
+/* ---------- Buttons ---------- */
+.btn{
+  display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border-radius:10px; border:1px solid var(--border);
+  background:var(--bg-elevated); font-weight:600; font-size:13.5px; white-space:nowrap; transition:all .12s;
+}
+.btn:hover{border-color:var(--ink-faint);}
+.btn-primary{background:var(--primary); color:var(--primary-ink); border-color:var(--primary);}
+.btn-primary:hover{filter:brightness(1.06);}
+.btn-ghost{background:transparent; border-color:transparent;}
+.btn-ghost:hover{background:var(--bg-sunken);}
+.btn-danger{color:var(--red); border-color:var(--red-soft);}
+.btn-danger:hover{background:var(--red-soft);}
+.btn-sm{padding:6px 11px; font-size:12.5px; border-radius:8px;}
+.btn-icon{padding:8px; border-radius:9px;}
+.btn:disabled{opacity:.45; cursor:not-allowed;}
+
+/* ---------- Dashboard ---------- */
+.dash-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(128px,1fr)); gap:10px; margin-bottom:22px;}
+.dash-card{
+  background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;
+  box-shadow:var(--shadow);
+}
+.dash-card .num{font-family:var(--font-mono); font-size:26px; font-weight:600; line-height:1;}
+.dash-card .lbl{font-size:11.5px; color:var(--ink-faint); margin-top:6px; font-weight:500;}
+.dash-card.c-green .num{color:var(--green);}
+.dash-card.c-blue .num{color:var(--blue);}
+.dash-card.c-amber .num{color:var(--amber);}
+.dash-card.c-red .num{color:var(--red);}
+.dash-card.c-accent .num{color:var(--accent);}
+
+.dash-progress-wrap{background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px; margin-bottom:22px; box-shadow:var(--shadow);}
+.dash-progress-wrap .top-row{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;}
+.dash-progress-wrap .top-row b{font-family:var(--font-mono); font-size:18px;}
+.bar-track{height:9px; border-radius:20px; background:var(--bg-sunken); overflow:hidden;}
+.bar-fill{height:100%; background:linear-gradient(90deg, var(--primary), var(--accent)); border-radius:20px; transition:width .3s;}
+
+.upcoming-strip{display:flex; flex-direction:column; gap:8px; margin-bottom:6px; max-height:340px; overflow-y:auto; padding-right:2px;}
+.upcoming-chip{
+  display:flex; align-items:center; gap:12px; cursor:pointer;
+  background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--radius-sm);
+  padding:10px 14px; box-shadow:var(--shadow); transition:border-color .12s;
+}
+.upcoming-chip:hover{border-color:var(--primary);}
+.upcoming-chip .u-date{font-family:var(--font-mono); font-size:11px; color:var(--ink-faint); flex-shrink:0; width:52px;}
+.upcoming-chip .u-title{font-weight:600; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1;}
+
+/* ---------- Toolbar / filters ---------- */
+.toolbar{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:14px;}
+.chip-group{display:flex; gap:6px; flex-wrap:wrap;}
+.chip{
+  padding:6px 12px; border-radius:20px; border:1px solid var(--border); background:var(--bg-elevated);
+  font-size:12.5px; font-weight:500; color:var(--ink-soft);
+}
+.chip.active{background:var(--ink); color:var(--bg); border-color:var(--ink);}
+[data-theme="dark"] .chip.active{background:var(--primary); color:var(--primary-ink); border-color:var(--primary);}
+select.filter-select{padding:7px 10px; border-radius:9px; border:1px solid var(--border); background:var(--bg-elevated);}
+
+/* ---------- Item cards ---------- */
+.item-list{display:flex; flex-direction:column; gap:10px;}
+.item-card{
+  position:relative; display:flex; gap:12px; background:var(--bg-elevated); border:1px solid var(--border);
+  border-radius:var(--radius); padding:14px 16px 14px 0; box-shadow:var(--shadow); overflow:hidden;
+}
+.rail{width:5px; flex-shrink:0; border-radius:6px 0 0 6px; align-self:stretch;}
+.rail.st-green{background:var(--green);} .rail.st-blue{background:var(--blue);}
+.rail.st-amber{background:var(--amber);} .rail.st-red{background:var(--red);} .rail.st-grey{background:var(--grey);}
+.item-checkbox{margin-top:2px; flex-shrink:0;}
+.item-checkbox input{width:19px; height:19px; accent-color:var(--primary); cursor:pointer;}
+.item-body{flex:1; min-width:0;}
+.item-top-row{display:flex; align-items:flex-start; gap:10px; justify-content:space-between;}
+.item-title{font-size:15.5px; font-weight:600; word-break:break-word;}
+.item-title.done{text-decoration:line-through; color:var(--ink-faint);}
+.badges{display:flex; gap:5px; flex-wrap:wrap; margin-top:5px;}
+.badge{padding:2px 8px; border-radius:20px; font-size:10.5px; font-weight:600; letter-spacing:.02em;}
+.badge.cat{background:var(--grey-soft); color:var(--ink-soft);}
+.badge.pr-Low{background:var(--grey-soft); color:var(--ink-soft);}
+.badge.pr-Medium{background:var(--blue-soft); color:var(--blue);}
+.badge.pr-High{background:var(--amber-soft); color:var(--amber);}
+.badge.pr-Urgent{background:var(--red-soft); color:var(--red);}
+.badge.carry{background:var(--accent-soft); color:var(--accent);}
+.badge.status-badge.b-green{background:var(--green-soft); color:var(--green);}
+.badge.status-badge.b-blue{background:var(--blue-soft); color:var(--blue);}
+.badge.status-badge.b-amber{background:var(--amber-soft); color:var(--amber);}
+.badge.status-badge.b-red{background:var(--red-soft); color:var(--red);}
+.badge.status-badge.b-grey{background:var(--grey-soft); color:var(--ink-soft);}
+.item-desc{font-size:13px; color:var(--ink-soft); margin-top:6px; max-width:640px; white-space:pre-wrap;}
+.item-meta{display:flex; gap:14px; flex-wrap:wrap; margin-top:9px; font-size:12px; color:var(--ink-faint);}
+.item-meta span{display:inline-flex; align-items:center; gap:4px;}
+.item-meta a{color:var(--primary); text-decoration:none;}
+.item-progress-row{display:flex; align-items:center; gap:10px; margin-top:10px; max-width:420px;}
+.item-progress-row .bar-track{flex:1;}
+.item-progress-row .pct{font-family:var(--font-mono); font-size:11.5px; width:34px; text-align:right; color:var(--ink-faint);}
+.item-actions{display:flex; gap:4px; flex-shrink:0; align-items:flex-start;}
+.day-ring-wrap{flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:2px; width:56px;}
+.day-ring-wrap .ring-label{font-size:9px; color:var(--ink-faint); font-weight:600; text-transform:uppercase; letter-spacing:.04em;}
+
+.empty-state{
+  text-align:center; padding:60px 20px; color:var(--ink-faint); border:1.5px dashed var(--border); border-radius:var(--radius);
+}
+.empty-state .es-icon{font-size:34px; margin-bottom:10px;}
+.empty-state h3{color:var(--ink-soft); margin-bottom:6px; font-size:16px;}
+
+/* ---------- Modal ---------- */
+.modal-overlay{
+  position:fixed; inset:0; background:rgba(10,14,11,.5); backdrop-filter:blur(2px); z-index:100;
+  display:flex; align-items:flex-start; justify-content:center; padding:26px 14px; overflow-y:auto;
+}
+.modal{
+  background:var(--bg-elevated); border-radius:18px; box-shadow:var(--shadow-lg); width:100%; max-width:620px;
+  padding:22px 24px 24px; margin-bottom:40px;
+}
+.modal.modal-sm{max-width:420px;}
+.modal-header{display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;}
+.modal-header h3{font-size:19px;}
+.form-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px 14px;}
+.form-grid .full{grid-column:1/-1;}
+.field label{display:block; font-size:12px; font-weight:600; color:var(--ink-soft); margin-bottom:5px;}
+.field label .req{color:var(--red);}
+.field input[type=text], .field input[type=date], .field input[type=datetime-local], .field input[type=number], .field input[type=url], .field select, .field textarea{
+  width:100%; padding:9px 11px; border-radius:9px; border:1px solid var(--border); background:var(--bg); color:var(--ink);
+}
+.field input:focus, .field select:focus, .field textarea:focus{outline:2px solid var(--primary); outline-offset:0; border-color:var(--primary);}
+.field textarea{resize:vertical; min-height:64px;}
+.field-error{color:var(--red); font-size:11.5px; margin-top:4px; display:none;}
+.field.invalid input, .field.invalid select{border-color:var(--red);}
+.field.invalid .field-error{display:block;}
+.reminder-offsets{display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;}
+.modal-footer{display:flex; justify-content:flex-end; gap:8px; margin-top:20px;}
+.helper-text{font-size:11.5px; color:var(--ink-faint); margin-top:4px; line-height:1.4;}
+
+/* ---------- Toast ---------- */
+#toast-wrap{position:fixed; bottom:18px; right:18px; z-index:200; display:flex; flex-direction:column; gap:8px; max-width:320px;}
+.toast{background:var(--ink); color:var(--bg); padding:11px 16px; border-radius:10px; font-size:13px; font-weight:500; box-shadow:var(--shadow-lg); animation:toastin .18s ease-out;}
+[data-theme="dark"] .toast{background:var(--bg-elevated); border:1px solid var(--border);}
+@keyframes toastin{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);}}
+
+/* ---------- Notes ---------- */
+.note-card{background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; box-shadow:var(--shadow); position:relative;}
+.note-card.pinned{border-color:var(--accent);}
+.note-top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
+.note-title{font-weight:600; font-size:14.5px;}
+.note-date{font-family:var(--font-mono); font-size:11px; color:var(--ink-faint); margin-top:2px;}
+.note-body{font-size:13px; color:var(--ink-soft); margin-top:8px; white-space:pre-wrap;}
+.notes-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:10px;}
+
+/* ---------- Calendar ---------- */
+.cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:6px;}
+.cal-dow{font-size:11px; font-weight:600; color:var(--ink-faint); text-align:center; padding-bottom:4px; text-transform:uppercase;}
+.cal-cell{
+  min-height:74px; border:1px solid var(--border); border-radius:9px; padding:6px; background:var(--bg-elevated);
+  cursor:pointer; display:flex; flex-direction:column; gap:3px; transition:border-color .12s;
+}
+.cal-cell:hover{border-color:var(--primary);}
+.cal-cell.other-month{opacity:.35;}
+.cal-cell.today{border-color:var(--primary); border-width:2px;}
+.cal-cell.selected{background:var(--primary-soft);}
+.cal-daynum{font-family:var(--font-mono); font-size:12px; font-weight:600;}
+.cal-dots{display:flex; gap:3px; flex-wrap:wrap;}
+.cal-dot{width:6px; height:6px; border-radius:50%;}
+.cal-nav{display:flex; align-items:center; gap:10px; margin-bottom:12px;}
+.cal-nav h3{font-size:17px; min-width:150px; text-align:center;}
+
+/* ---------- Misc ---------- */
+.section-heading{display:flex; justify-content:space-between; align-items:center; margin:26px 0 12px;}
+.section-heading h3{font-size:15px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em; font-weight:700;}
+.notice-banner{
+  background:var(--amber-soft); border:1px solid var(--amber); color:var(--ink); border-radius:var(--radius-sm);
+  padding:10px 14px; font-size:12.5px; margin-bottom:16px; line-height:1.5;
+}
+.notice-banner b{color:var(--amber);}
+.trash-list .item-card{opacity:.8;}
+.switch{position:relative; display:inline-block; width:38px; height:21px; flex-shrink:0;}
+.switch input{opacity:0; width:0; height:0;}
+.slider{position:absolute; cursor:pointer; inset:0; background:var(--border); border-radius:20px; transition:.15s;}
+.slider:before{position:absolute; content:""; height:15px; width:15px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:.15s;}
+.switch input:checked + .slider{background:var(--primary);}
+.switch input:checked + .slider:before{transform:translateX(17px);}
+
+.mobile-tabbar{display:none;}
+.hamburger{display:none;}
+
+@media (max-width:880px){
+  .sidebar{position:fixed; left:0; top:0; bottom:0; z-index:90; transform:translateX(-100%); transition:transform .2s; box-shadow:var(--shadow-lg);}
+  .sidebar.open{transform:translateX(0);}
+  .hamburger{display:flex;}
+  .content{padding:16px 14px 90px;}
+  .topbar{padding:12px 14px;}
+  .topbar h2{display:none;}
+  .form-grid{grid-template-columns:1fr;}
+  .item-card{flex-wrap:wrap;}
+  .day-ring-wrap{width:44px;}
+}
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}
+}
+::backdrop{background:transparent;}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">W</div>
+      <div>
+        <h1>Work Tracker</h1>
+        <span>Projects &amp; tasks</span>
+      </div>
+    </div>
+    <nav class="viewnav" id="viewnav"></nav>
+    <div class="sidebar-section-label">Data</div>
+    <div class="sidebar-foot">
+      <button class="btn btn-ghost btn-sm" id="btnTrash">🗑 Recently deleted</button>
+      <button class="btn btn-ghost btn-sm" id="btnExport">⇩ Export data</button>
+      <button class="btn btn-ghost btn-sm" id="btnImport">⇧ Import data</button>
+      <button class="btn btn-ghost btn-sm" id="btnClearSample">✕ Clear sample data</button>
+      <input type="file" id="importFile" accept="application/json" class="hidden">
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <button class="btn btn-icon hamburger" id="btnHamburger" aria-label="Open menu">☰</button>
+      <h2 id="viewTitle">Today</h2>
+      <div class="search-wrap">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input type="text" id="searchInput" placeholder="Search title, notes, person…">
+      </div>
+      <div class="spacer"></div>
+      <button class="btn btn-icon" id="btnTheme" title="Toggle light/dark" aria-label="Toggle theme">🌙</button>
+      <button class="btn btn-icon" id="btnNotify" title="Enable browser notifications" aria-label="Enable notifications">🔔</button>
+      <button class="btn btn-primary" id="btnAddItem">＋ Add item</button>
+    </div>
+
+    <div class="content" id="content"></div>
+  </div>
+</div>
+
+<div id="toast-wrap"></div>
+<div id="modalRoot"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* =========================================================
+   CONSTANTS
+   ========================================================= */
+const STORAGE_KEY = "workProjectTrackerData_v1";
+const SG_TZ = "Asia/Singapore";
+const CATEGORIES = ["Work","Project","Personal","Appointment","Follow-up","Purchase","Coaching","Training","Classes","Sewing","Miscellaneous"];
+const PRIORITIES = ["Low","Medium","High","Urgent"];
+const STATUSES = ["Not started","In progress","Waiting on someone","On hold","Completed"];
+const DEFAULT_OFFSETS = [7,3,1,0,"daily"];
+const VIEWS = [
+  {id:"today", label:"Today", icon:"◐"},
+  {id:"tomorrow", label:"Tomorrow", icon:"◑"},
+  {id:"week", label:"This Week", icon:"▤"},
+  {id:"month", label:"This Month", icon:"▦"},
+  {id:"all", label:"All Items", icon:"≡"},
+  {id:"overdue", label:"Overdue", icon:"!"},
+  {id:"completed", label:"History", icon:"✓"},
+  {id:"misc", label:"Miscellaneous", icon:"✎"},
+  {id:"calendar", label:"Calendar", icon:"▥"}
+];
+
+/* =========================================================
+   DATE HELPERS (Singapore timezone, DD/MM/YYYY display)
+   ========================================================= */
+function sgNow(){
+  // Returns a Date object representing "now" but we always read fields via SG-formatted strings
+  return new Date();
+}
+function sgDateStr(d){
+  // yyyy-mm-dd in Asia/Singapore
+  d = d || new Date();
+  const fmt = new Intl.DateTimeFormat("en-CA", {timeZone:SG_TZ, year:"numeric", month:"2-digit", day:"2-digit"});
+  return fmt.format(d); // en-CA gives yyyy-mm-dd
+}
+function sgTimeStr(d){
+  d = d || new Date();
+  const fmt = new Intl.DateTimeFormat("en-GB", {timeZone:SG_TZ, hour:"2-digit", minute:"2-digit", hour12:false});
+  return fmt.format(d);
+}
+function todayStr(){ return sgDateStr(new Date()); }
+function ymdToDate(ymd){
+  if(!ymd) return null;
+  const [y,m,day] = ymd.split("-").map(Number);
+  return new Date(Date.UTC(y, m-1, day));
+}
+function daysBetweenYMD(a,b){
+  if(!a || !b) return null;
+  const da = ymdToDate(a), db = ymdToDate(b);
+  return Math.round((db - da) / 86400000);
+}
+function formatDMY(ymd){
+  if(!ymd) return "—";
+  const [y,m,d] = ymd.split("-");
+  return `${d}/${m}/${y}`;
+}
+function formatDMYshort(ymd){
+  if(!ymd) return "—";
+  const [y,m,d] = ymd.split("-");
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return `${parseInt(d,10)} ${months[parseInt(m,10)-1]}`;
+}
+function addDaysYMD(ymd, n){
+  const d = ymdToDate(ymd);
+  d.setUTCDate(d.getUTCDate()+n);
+  return d.toISOString().slice(0,10);
+}
+function isSameOrBefore(a,b){ return a && b && a<=b; }
+
+/* =========================================================
+   STATE
+   ========================================================= */
+let DB = null; // {items:[], notes:[], settings:{}}
+let state = {
+  view: "today",
+  search: "",
+  filterCategory: new Set(),
+  filterPriority: new Set(),
+  filterStatus: new Set(),
+  sort: "deadline",
+  calMonth: null, // {y,m}
+  calSelectedDay: null,
+  editingItemId: null,
+  editingNoteId: null,
+  sidebarOpen: false
+};
+
+/* =========================================================
+   PERSISTENCE
+   ========================================================= */
+function loadDB(){
+  let raw = null;
+  try{ raw = localStorage.getItem(STORAGE_KEY); }catch(e){}
+  if(raw){
+    try{ DB = JSON.parse(raw); }catch(e){ DB = null; }
+  }
+  if(!DB){
+    DB = { items:[], notes:[], settings:{theme:"light"} };
+    seedSampleData(DB);
+  }
+  if(!DB.settings) DB.settings = {theme:"light"};
+  if(!DB.items) DB.items = [];
+  if(!DB.notes) DB.notes = [];
+}
+function saveDB(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(DB)); }
+  catch(e){ toast("⚠️ Could not save — your browser storage may be full or disabled.", true); }
+}
+function uid(prefix){
+  return (prefix||"id") + "_" + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+}
+
+/* =========================================================
+   SAMPLE DATA
+   ========================================================= */
+function seedSampleData(db){
+  const t = todayStr();
+  db.items.push({
+    id: uid("item"), isSample:true,
+    title: "Prepare listing brief — Thomson Reserve unit",
+    description: "Draft floor plan highlights, pricing comparison and marketing angle for the District 20 listing before the client call.",
+    category:"Work", priority:"High",
+    dateCreated:t, startDate:t, deadline: addDaysYMD(t,2),
+    estDays:3, completion:40, status:"In progress",
+    person:"Client — Mr Tan", link:"https://www.propnex.com",
+    reminderDateTime:"", reminderOffsets:[3,1,0,"daily"],
+    carryForwardEnabled:true, carryForwardCount:0, lastSeenDate:t,
+    completedAt:null, preCompleteSnapshot:null,
+    isDeleted:false, deletedAt:null, notified:[], customReminderSent:false,
+    createdAt: Date.now()-5000
+  });
+  db.items.push({
+    id: uid("item"), isSample:true,
+    title: "Follow up with buyer on Pasir Ris 8 offer",
+    description: "Check if they've reviewed the option-to-purchase terms and confirm the exercise date.",
+    category:"Follow-up", priority:"Urgent",
+    dateCreated:addDaysYMD(t,-2), startDate:addDaysYMD(t,-2), deadline: addDaysYMD(t,-1),
+    estDays:1, completion:60, status:"Waiting on someone",
+    person:"Buyer — Mrs Lim", link:"",
+    reminderDateTime:"", reminderOffsets:[1,0,"daily"],
+    carryForwardEnabled:true, carryForwardCount:1, lastSeenDate:t,
+    completedAt:null, preCompleteSnapshot:null,
+    isDeleted:false, deletedAt:null, notified:[], customReminderSent:false,
+    createdAt: Date.now()-4000
+  });
+  db.items.push({
+    id: uid("item"), isSample:true,
+    title: "Restock crystal beads — rose quartz & amethyst",
+    description: "Reorder from supplier for the Thread and Beads bracelet line, current stock running low ahead of the weekend market.",
+    category:"Project", priority:"Medium",
+    dateCreated:t, startDate:t, deadline: addDaysYMD(t,5),
+    estDays:2, completion:0, status:"Not started",
+    person:"", link:"https://thethreadandbeads.com",
+    reminderDateTime:"", reminderOffsets:[7,3,1,0],
+    carryForwardEnabled:true, carryForwardCount:0, lastSeenDate:t,
+    completedAt:null, preCompleteSnapshot:null,
+    isDeleted:false, deletedAt:null, notified:[], customReminderSent:false,
+    createdAt: Date.now()-3000
+  });
+  db.items.push({
+    id: uid("item"), isSample:true,
+    title: "Pack & ship Thread and Beads order #114",
+    description: "Custom bracelet set, size M. Include care card and thank-you note.",
+    category:"Work", priority:"High",
+    dateCreated:addDaysYMD(t,-1), startDate:addDaysYMD(t,-1), deadline: t,
+    estDays:1, completion:80, status:"In progress",
+    person:"Customer — Wei Ling", link:"",
+    reminderDateTime:"", reminderOffsets:[1,0,"daily"],
+    carryForwardEnabled:true, carryForwardCount:0, lastSeenDate:t,
+    completedAt:null, preCompleteSnapshot:null,
+    isDeleted:false, deletedAt:null, notified:[], customReminderSent:false,
+    createdAt: Date.now()-2000
+  });
+  db.items.push({
+    id: uid("item"), isSample:true,
+    title: "Viewing appointment — Bedok Reservoir condo",
+    description: "3-bedroom unit, bring floor plan printouts and pricing sheet.",
+    category:"Appointment", priority:"Medium",
+    dateCreated:t, startDate:t, deadline: addDaysYMD(t,1),
+    estDays:1, completion:0, status:"Not started",
+    person:"Prospective buyer", link:"",
+    reminderDateTime:"", reminderOffsets:[1,0],
+    carryForwardEnabled:true, carryForwardCount:0, lastSeenDate:t,
+    completedAt:null, preCompleteSnapshot:null,
+    isDeleted:false, deletedAt:null, notified:[], customReminderSent:false,
+    createdAt: Date.now()-1000
+  });
+  db.items.push({
+    id: uid("item"), isSample:true,
+    title: "Submit quarterly CEA CPD points",
+    description: "Already completed — kept as an example of a finished item.",
+    category:"Work", priority:"Low",
+    dateCreated:addDaysYMD(t,-6), startDate:addDaysYMD(t,-6), deadline: addDaysYMD(t,-3),
+    estDays:1, completion:100, status:"Completed",
+    person:"", link:"",
+    reminderDateTime:"", reminderOffsets:[7,3,1,0],
+    carryForwardEnabled:true, carryForwardCount:0, lastSeenDate:t,
+    completedAt: Date.now()-86400000*3, preCompleteSnapshot:null,
+    isDeleted:false, deletedAt:null, notified:[], customReminderSent:false,
+    createdAt: Date.now()-500
+  });
+  db.notes.push({
+    id: uid("note"), isSample:true, title:"Supplier contact — beads",
+    date:t, notes:"Main crystal bead supplier: Golden Gem Trading, WhatsApp +65 8xxx xxxx. Ask about bulk rate above 5kg.",
+    pinned:true, isDeleted:false, deletedAt:null, createdAt:Date.now()-2000
+  });
+  db.notes.push({
+    id: uid("note"), isSample:true, title:"PropNex CPD deadline window",
+    date:t, notes:"CPD cycle typically closes end of the year — check portal for exact points needed this cycle.",
+    pinned:false, isDeleted:false, deletedAt:null, createdAt:Date.now()-1000
+  });
+}
+
+/* =========================================================
+   DERIVED / COMPUTED HELPERS FOR ITEMS
+   ========================================================= */
+function daysRemaining(item){
+  if(!item.deadline) return null;
+  return daysBetweenYMD(todayStr(), item.deadline);
+}
+function isOverdue(item){
+  if(item.status === "Completed" || !item.deadline) return false;
+  return daysRemaining(item) < 0;
+}
+function urgencyKey(item){
+  // returns one of: green, blue, amber, red, grey
+  if(item.status === "Completed") return "green";
+  if(item.deadline){
+    const dr = daysRemaining(item);
+    if(dr < 0) return "red";
+    if(dr <= 3) return "amber";
+  }
+  if(item.status === "In progress") return "blue";
+  return "grey";
+}
+function statusLabelText(item){
+  if(item.status === "Completed") return "Completed";
+  if(isOverdue(item)) return `Overdue by ${Math.abs(daysRemaining(item))}d`;
+  if(item.deadline){
+    const dr = daysRemaining(item);
+    if(dr === 0) return "Due today";
+    if(dr === 1) return "Due tomorrow";
+    if(dr <= 3) return `Due soon · ${dr}d left`;
+    return `${dr}d left`;
+  }
+  return item.status;
+}
+function activeItems(){ return DB.items.filter(i=>!i.isDeleted); }
+function activeNotes(){ return DB.notes.filter(n=>!n.isDeleted); }
+
+/* =========================================================
+   CARRY-FORWARD & TRASH PURGE (run on load)
+   ========================================================= */
+function runCarryForward(){
+  const t = todayStr();
+  activeItems().forEach(item=>{
+    if(item.status === "Completed") { item.lastSeenDate = t; return; }
+    if(item.carryForwardEnabled === false){ item.lastSeenDate = t; return; }
+    const last = item.lastSeenDate || item.dateCreated || t;
+    if(last < t){
+      const passed = daysBetweenYMD(last, t);
+      if(passed > 0){
+        item.carryForwardCount = (item.carryForwardCount||0) + passed;
+      }
+      item.lastSeenDate = t;
+    }
+  });
+}
+function purgeOldTrash(){
+  const cutoff = Date.now() - 30*86400000;
+  DB.items = DB.items.filter(i=> !(i.isDeleted && i.deletedAt && i.deletedAt < cutoff));
+  DB.notes = DB.notes.filter(n=> !(n.isDeleted && n.deletedAt && n.deletedAt < cutoff));
+}
+
+/* =========================================================
+   TOASTS
+   ========================================================= */
+function toast(msg, isWarn){
+  const wrap = document.getElementById("toast-wrap");
+  const el = document.createElement("div");
+  el.className = "toast";
+  if(isWarn) el.style.background = "var(--red)";
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(()=>{ el.style.opacity="0"; el.style.transition="opacity .25s"; setTimeout(()=>el.remove(),250); }, 2600);
+}
+
+/* =========================================================
+   RENDER: SIDEBAR NAV
+   ========================================================= */
+function viewCount(viewId){
+  const items = activeItems();
+  const t = todayStr();
+  switch(viewId){
+    case "today": return items.filter(i=>i.status!=="Completed" && i.deadline===t).length;
+    case "tomorrow": return items.filter(i=>i.status!=="Completed" && i.deadline===addDaysYMD(t,1)).length;
+    case "week": return itemsThisWeek(items).length;
+    case "month": return itemsThisMonth(items).length;
+    case "all": return items.filter(i=>i.status!=="Completed").length;
+    case "overdue": return items.filter(isOverdue).length;
+    case "completed": return items.filter(i=>i.status==="Completed").length;
+    case "misc": return activeNotes().length;
+    case "calendar": return null;
+  }
+}
+function itemsThisWeek(items){
+  const t = new Date();
+  const sgTodayYMD = todayStr();
+  const dow = new Intl.DateTimeFormat("en-GB",{timeZone:SG_TZ, weekday:"short"}).format(t);
+  const dowMap = {Mon:0,Tue:1,Wed:2,Thu:3,Fri:4,Sat:5,Sun:6};
+  const offsetFromMon = dowMap[dow] ?? 0;
+  const monday = addDaysYMD(sgTodayYMD, -offsetFromMon);
+  const sunday = addDaysYMD(monday, 6);
+  return items.filter(i=>i.status!=="Completed" && i.deadline && i.deadline>=monday && i.deadline<=sunday);
+}
+function itemsThisMonth(items){
+  const t = todayStr();
+  const ym = t.slice(0,7);
+  return items.filter(i=>i.status!=="Completed" && i.deadline && i.deadline.slice(0,7)===ym);
+}
+
+function renderSidebarNav(){
+  const nav = document.getElementById("viewnav");
+  nav.innerHTML = VIEWS.map(v=>{
+    const c = viewCount(v.id);
+    const warn = (v.id==="overdue" && c>0) ? "warn" : "";
+    const countHtml = c===null ? "" : `<span class="count ${warn}">${c}</span>`;
+    return `<button class="view-btn ${state.view===v.id?"active":""}" data-view="${v.id}">
+      <span>${v.icon}&nbsp;&nbsp;${v.label}</span>${countHtml}
+    </button>`;
+  }).join("");
+  nav.querySelectorAll(".view-btn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      state.view = btn.dataset.view;
+      state.sidebarOpen = false;
+      document.getElementById("sidebar").classList.remove("open");
+      render();
+    });
+  });
+}
+
+/* =========================================================
+   FILTER / SORT / SEARCH PIPELINE
+   ========================================================= */
+function matchesSearch(item, q){
+  if(!q) return true;
+  q = q.toLowerCase();
+  return (item.title||"").toLowerCase().includes(q) ||
+         (item.description||"").toLowerCase().includes(q) ||
+         (item.person||"").toLowerCase().includes(q);
+}
+function matchesFilters(item){
+  if(state.filterCategory.size && !state.filterCategory.has(item.category)) return false;
+  if(state.filterPriority.size && !state.filterPriority.has(item.priority)) return false;
+  if(state.filterStatus.size && !state.filterStatus.has(item.status)) return false;
+  return true;
+}
+function sortItems(list){
+  const arr = list.slice();
+  const prOrder = {Urgent:0, High:1, Medium:2, Low:3};
+  switch(state.sort){
+    case "deadline":
+      arr.sort((a,b)=>(a.deadline||"9999").localeCompare(b.deadline||"9999")); break;
+    case "priority":
+      arr.sort((a,b)=>prOrder[a.priority]-prOrder[b.priority]); break;
+    case "created":
+      arr.sort((a,b)=>b.createdAt-a.createdAt); break;
+    case "completion":
+      arr.sort((a,b)=>b.completion-a.completion); break;
+  }
+  return arr;
+}
+function baseViewItems(){
+  const items = activeItems();
+  const t = todayStr();
+  switch(state.view){
+    case "today": return items.filter(i=>i.status!=="Completed" && i.deadline===t);
+    case "tomorrow": return items.filter(i=>i.status!=="Completed" && i.deadline===addDaysYMD(t,1));
+    case "week": return itemsThisWeek(items);
+    case "month": return itemsThisMonth(items);
+    case "all": return items.filter(i=>i.status!=="Completed");
+    case "overdue": return items.filter(isOverdue);
+    case "completed": return items.filter(i=>i.status==="Completed");
+    default: return [];
+  }
+}
+function pipeline(){
+  let list = baseViewItems();
+  list = list.filter(i=>matchesSearch(i, state.search) && matchesFilters(i));
+  return sortItems(list);
+}
+
+/* =========================================================
+   MAIN RENDER DISPATCH
+   ========================================================= */
+function render(){
+  renderSidebarNav();
+  document.getElementById("viewTitle").textContent = VIEWS.find(v=>v.id===state.view).label;
+  document.title = "Work & Project Tracker — " + VIEWS.find(v=>v.id===state.view).label;
+  const c = document.getElementById("content");
+  document.getElementById("btnTheme").textContent = DB.settings.theme==="dark" ? "☀️" : "🌙";
+
+  if(state.view === "misc"){ c.innerHTML = renderMiscView(); attachMiscHandlers(); return; }
+  if(state.view === "calendar"){ c.innerHTML = renderCalendarView(); attachCalendarHandlers(); return; }
+
+  let html = "";
+  html += renderDashboard();
+  html += renderToolbar();
+  const list = pipeline();
+  html += `<div class="item-list" id="itemList">`;
+  if(list.length===0){
+    html += emptyState();
+  } else {
+    html += list.map(renderItemCard).join("");
+  }
+  html += `</div>`;
+  c.innerHTML = html;
+  attachListHandlers();
+  attachToolbarHandlers();
+  document.querySelectorAll("#upcomingStrip .upcoming-chip").forEach(el=>{
+    el.addEventListener("click", ()=>openItemModal(el.dataset.jump));
+  });
+}
+
+/* =========================================================
+   DASHBOARD
+   ========================================================= */
+function renderDashboard(){
+  const items = activeItems();
+  const t = todayStr();
+  const outstanding = items.filter(i=>i.status!=="Completed");
+  const dueToday = items.filter(i=>i.status!=="Completed" && i.deadline===t).length;
+  const dueWeek = itemsThisWeek(items).length;
+  const overdue = items.filter(isOverdue).length;
+  const highPriority = outstanding.filter(i=>i.priority==="Urgent"||i.priority==="High").length;
+  const completed = items.filter(i=>i.status==="Completed").length;
+  const overallPct = items.length ? Math.round(items.reduce((s,i)=>s+(i.status==="Completed"?100:i.completion),0)/items.length) : 0;
+
+  const upcoming = outstanding.filter(i=>i.deadline).sort((a,b)=>a.deadline.localeCompare(b.deadline));
+
+  return `
+  <div class="dash-grid">
+    <div class="dash-card"><div class="num mono">${outstanding.length}</div><div class="lbl">Outstanding</div></div>
+    <div class="dash-card c-amber"><div class="num mono">${dueToday}</div><div class="lbl">Due today</div></div>
+    <div class="dash-card c-blue"><div class="num mono">${dueWeek}</div><div class="lbl">Due this week</div></div>
+    <div class="dash-card c-red"><div class="num mono">${overdue}</div><div class="lbl">Overdue</div></div>
+    <div class="dash-card c-accent"><div class="num mono">${highPriority}</div><div class="lbl">High priority</div></div>
+    <div class="dash-card c-green"><div class="num mono">${completed}</div><div class="lbl">Completed</div></div>
+  </div>
+  <div class="dash-progress-wrap">
+    <div class="top-row"><span style="font-size:12.5px;color:var(--ink-faint);font-weight:600;">OVERALL COMPLETION</span><b class="mono">${overallPct}%</b></div>
+    <div class="bar-track"><div class="bar-fill" style="width:${overallPct}%"></div></div>
+  </div>
+  ${upcoming.length ? `
+  <div class="section-heading" style="margin:0 0 8px;"><h3>Outstanding work · ${upcoming.length}</h3></div>
+  <div class="upcoming-strip" id="upcomingStrip">
+    ${upcoming.map(i=>`<div class="upcoming-chip" data-jump="${i.id}"><span class="cal-dot" style="background:${urgencyColorVar(urgencyKey(i))}; flex-shrink:0;"></span><div class="u-date mono">${formatDMYshort(i.deadline)}</div><div class="u-title">${escapeHtml(i.title)}</div></div>`).join("")}
+  </div>` : ""}
+  `;
+}
+
+/* =========================================================
+   TOOLBAR
+   ========================================================= */
+function renderToolbar(){
+  return `
+  <div class="toolbar">
+    <div class="chip-group" id="catChips">
+      ${CATEGORIES.map(cat=>`<button class="chip ${state.filterCategory.has(cat)?"active":""}" data-type="cat" data-val="${cat}">${cat}</button>`).join("")}
+    </div>
+    <div class="chip-group" id="prChips">
+      ${PRIORITIES.map(p=>`<button class="chip ${state.filterPriority.has(p)?"active":""}" data-type="pr" data-val="${p}">${p}</button>`).join("")}
+    </div>
+    <div class="spacer"></div>
+    <select class="filter-select" id="sortSelect">
+      <option value="deadline" ${state.sort==="deadline"?"selected":""}>Sort: Deadline</option>
+      <option value="priority" ${state.sort==="priority"?"selected":""}>Sort: Priority</option>
+      <option value="created" ${state.sort==="created"?"selected":""}>Sort: Date created</option>
+      <option value="completion" ${state.sort==="completion"?"selected":""}>Sort: Completion %</option>
+    </select>
+  </div>`;
+}
+function attachToolbarHandlers(){
+  document.querySelectorAll('.chip[data-type="cat"]').forEach(el=>{
+    el.addEventListener("click", ()=>{
+      const v = el.dataset.val;
+      state.filterCategory.has(v) ? state.filterCategory.delete(v) : state.filterCategory.add(v);
+      render();
+    });
+  });
+  document.querySelectorAll('.chip[data-type="pr"]').forEach(el=>{
+    el.addEventListener("click", ()=>{
+      const v = el.dataset.val;
+      state.filterPriority.has(v) ? state.filterPriority.delete(v) : state.filterPriority.add(v);
+      render();
+    });
+  });
+  const sortSel = document.getElementById("sortSelect");
+  if(sortSel) sortSel.addEventListener("change", e=>{ state.sort = e.target.value; render(); });
+}
+
+/* =========================================================
+   ITEM CARD
+   ========================================================= */
+function urgencyColorVar(key){
+  return {green:"var(--green)", blue:"var(--blue)", amber:"var(--amber)", red:"var(--red)", grey:"var(--grey)"}[key];
+}
+function dayRingSVG(item){
+  const key = urgencyKey(item);
+  const color = urgencyColorVar(key);
+  let label, sub;
+  if(item.status==="Completed"){ label="✓"; sub="done"; }
+  else if(!item.deadline){ label="–"; sub="no date"; }
+  else {
+    const dr = daysRemaining(item);
+    label = dr<0 ? `${Math.abs(dr)}` : `${dr}`;
+    sub = dr<0 ? "days od" : (dr===0?"today":"days left");
+  }
+  const pct = item.status==="Completed" ? 100 : Math.max(0,Math.min(100, item.completion||0));
+  const r=17, c=2*Math.PI*r;
+  const offset = c - (pct/100)*c;
+  return `
+  <div class="day-ring-wrap">
+    <svg width="46" height="46" viewBox="0 0 46 46">
+      <circle cx="23" cy="23" r="${r}" fill="none" stroke="var(--border)" stroke-width="4"/>
+      <circle cx="23" cy="23" r="${r}" fill="none" stroke="${color}" stroke-width="4" stroke-linecap="round"
+        stroke-dasharray="${c}" stroke-dashoffset="${offset}" transform="rotate(-90 23 23)"/>
+      <text x="23" y="26" text-anchor="middle" font-size="12" font-weight="700" fill="var(--ink)" font-family="IBM Plex Mono, monospace">${label}</text>
+    </svg>
+    <span class="ring-label">${sub}</span>
+  </div>`;
+}
+function renderItemCard(item){
+  const key = urgencyKey(item);
+  const done = item.status === "Completed";
+  const badgeStatusClass = {green:"b-green",blue:"b-blue",amber:"b-amber",red:"b-red",grey:"b-grey"}[key];
+  return `
+  <div class="item-card" data-id="${item.id}">
+    <div class="rail st-${key}"></div>
+    <div class="item-checkbox"><input type="checkbox" ${done?"checked":""} data-action="toggle-complete" aria-label="Mark complete"></div>
+    <div class="item-body">
+      <div class="item-top-row">
+        <div>
+          <div class="item-title ${done?"done":""}">${escapeHtml(item.title)}</div>
+          <div class="badges">
+            <span class="badge cat">${item.category}</span>
+            <span class="badge pr-${item.priority}">${item.priority}</span>
+            <span class="badge status-badge ${badgeStatusClass}">${statusLabelText(item)}</span>
+            ${item.carryForwardCount>0 ? `<span class="badge carry">Carried Forward (x${item.carryForwardCount})</span>` : ""}
+          </div>
+        </div>
+      </div>
+      ${item.description ? `<div class="item-desc">${escapeHtml(item.description)}</div>` : ""}
+      <div class="item-meta">
+        <span>📅 Deadline: ${formatDMY(item.deadline)}</span>
+        ${item.startDate ? `<span>▶ Start: ${formatDMY(item.startDate)}</span>` : ""}
+        ${item.estDays ? `<span>⏱ Est. ${item.estDays}d</span>` : ""}
+        ${item.person ? `<span>👤 ${escapeHtml(item.person)}</span>` : ""}
+        ${item.link ? `<span>🔗 <a href="${escapeAttr(item.link)}" target="_blank" rel="noopener">Link</a></span>` : ""}
+      </div>
+      <div class="item-progress-row">
+        <div class="bar-track"><div class="bar-fill" style="width:${item.completion}%; background:${urgencyColorVar(key)};"></div></div>
+        <div class="pct mono">${item.completion}%</div>
+      </div>
+    </div>
+    ${dayRingSVG(item)}
+    <div class="item-actions">
+      <button class="btn btn-icon btn-ghost btn-sm" data-action="edit" title="Edit" aria-label="Edit">✎</button>
+      <button class="btn btn-icon btn-ghost btn-sm" data-action="ics" title="Download calendar event" aria-label="Download .ics">📅</button>
+      <button class="btn btn-icon btn-ghost btn-sm" data-action="delete" title="Delete" aria-label="Delete">🗑</button>
+    </div>
+  </div>`;
+}
+function emptyState(){
+  const msgs = {
+    today:["🌤","Nothing due today","Enjoy the clear runway — or add something you'd like to get done."],
+    tomorrow:["🌥","Nothing due tomorrow","You're ahead of schedule."],
+    week:["📆","No deadlines this week","Add an item with a deadline to see it here."],
+    month:["🗓","No deadlines this month","Add an item with a deadline to see it here."],
+    all:["✨","No active items yet","Add your first task, project or appointment to get started."],
+    overdue:["👍","Nothing overdue","You're on track — keep it up."],
+    completed:["🕊","No history yet","Items you tick off as done collect here, so nothing is ever deleted by accident."]
+  };
+  const [icon,h,p] = msgs[state.view] || ["📋","Nothing here","Try a different view or add an item."];
+  return `<div class="empty-state"><div class="es-icon">${icon}</div><h3>${h}</h3><p>${p}</p>
+    <button class="btn btn-primary" style="margin-top:14px;" id="emptyAddBtn">＋ Add item</button></div>`;
+}
+
+function attachListHandlers(){
+  const emptyBtn = document.getElementById("emptyAddBtn");
+  if(emptyBtn) emptyBtn.addEventListener("click", ()=>openItemModal());
+  document.querySelectorAll(".item-card").forEach(card=>{
+    const id = card.dataset.id;
+    card.querySelector('[data-action="toggle-complete"]').addEventListener("change", e=>toggleComplete(id, e.target.checked));
+    card.querySelector('[data-action="edit"]').addEventListener("click", ()=>openItemModal(id));
+    card.querySelector('[data-action="delete"]').addEventListener("click", ()=>confirmDeleteItem(id));
+    card.querySelector('[data-action="ics"]').addEventListener("click", ()=>downloadICS(id));
+  });
+}
+
+/* =========================================================
+   COMPLETE TOGGLE
+   ========================================================= */
+function toggleComplete(id, checked){
+  const item = DB.items.find(i=>i.id===id);
+  if(!item) return;
+  if(checked){
+    item.preCompleteSnapshot = {status:item.status, completion:item.completion};
+    item.status = "Completed";
+    item.completion = 100;
+    item.completedAt = Date.now();
+    toast("Marked complete ✓");
+  } else {
+    if(item.preCompleteSnapshot){
+      item.status = item.preCompleteSnapshot.status;
+      item.completion = item.preCompleteSnapshot.completion;
+      item.preCompleteSnapshot = null;
+    } else {
+      item.status = "In progress";
+    }
+    item.completedAt = null;
+    toast("Restored to previous state");
+  }
+  saveDB();
+  render();
+}
+
+/* =========================================================
+   ITEM MODAL (Add / Edit)
+   ========================================================= */
+function openItemModal(id){
+  state.editingItemId = id || null;
+  const item = id ? DB.items.find(i=>i.id===id) : null;
+  const v = item || {
+    title:"", description:"", category:"Work", priority:"Medium",
+    dateCreated:todayStr(), startDate:todayStr(), deadline:"", estDays:"",
+    completion:0, status:"Not started", person:"", link:"",
+    reminderDateTime:"", reminderOffsets:DEFAULT_OFFSETS.slice(), carryForwardEnabled:true
+  };
+  const offsets = v.reminderOffsets || DEFAULT_OFFSETS;
+  const offsetChip = (val,label)=>`<button type="button" class="chip ${offsets.includes(val)?"active":""}" data-offset="${val}">${label}</button>`;
+
+  const html = `
+  <div class="modal-overlay" id="itemModalOverlay">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="itemModalTitle">
+      <div class="modal-header">
+        <h3 id="itemModalTitle">${item?"Edit item":"Add item"}</h3>
+        <button class="btn btn-icon btn-ghost" id="closeItemModal" aria-label="Close">✕</button>
+      </div>
+      <form id="itemForm">
+        <div class="form-grid">
+          <div class="field full" id="f_title">
+            <label>Title <span class="req">*</span></label>
+            <input type="text" name="title" value="${escapeAttr(v.title)}" maxlength="140">
+            <div class="field-error">Please enter a title.</div>
+          </div>
+          <div class="field full">
+            <label>Description / notes</label>
+            <textarea name="description">${escapeHtml(v.description)}</textarea>
+          </div>
+          <div class="field">
+            <label>Category</label>
+            <select name="category">${CATEGORIES.map(c=>`<option ${v.category===c?"selected":""}>${c}</option>`).join("")}</select>
+          </div>
+          <div class="field">
+            <label>Priority</label>
+            <select name="priority">${PRIORITIES.map(p=>`<option ${v.priority===p?"selected":""}>${p}</option>`).join("")}</select>
+          </div>
+          <div class="field">
+            <label>Status</label>
+            <select name="status">${STATUSES.map(s=>`<option ${v.status===s?"selected":""}>${s}</option>`).join("")}</select>
+          </div>
+          <div class="field">
+            <label>Completion (%)</label>
+            <input type="number" name="completion" min="0" max="100" value="${v.completion}">
+          </div>
+          <div class="field">
+            <label>Date created</label>
+            <input type="date" name="dateCreated" value="${v.dateCreated||""}">
+          </div>
+          <div class="field">
+            <label>Start date</label>
+            <input type="date" name="startDate" value="${v.startDate||""}">
+          </div>
+          <div class="field">
+            <label>Deadline</label>
+            <input type="date" name="deadline" value="${v.deadline||""}">
+          </div>
+          <div class="field">
+            <label>Estimated days to complete</label>
+            <input type="number" name="estDays" min="0" value="${v.estDays||""}">
+          </div>
+          <div class="field">
+            <label>Person responsible / contact</label>
+            <input type="text" name="person" value="${escapeAttr(v.person)}">
+          </div>
+          <div class="field">
+            <label>Link (website / document)</label>
+            <input type="url" name="link" placeholder="https://" value="${escapeAttr(v.link)}">
+          </div>
+          <div class="field full">
+            <label>Custom reminder date/time (optional, one-time)</label>
+            <input type="datetime-local" name="reminderDateTime" value="${v.reminderDateTime||""}">
+          </div>
+          <div class="field full">
+            <label>Deadline-relative reminders</label>
+            <div class="reminder-offsets" id="offsetChips">
+              ${offsetChip(7,"7 days before")}${offsetChip(3,"3 days before")}${offsetChip(1,"1 day before")}${offsetChip(0,"On deadline")}${offsetChip("daily","Daily if overdue")}
+            </div>
+            <div class="helper-text">Notifications only fire while this tab is open in your browser — see the 🔔 button for details, or download a calendar (.ics) reminder from the item card.</div>
+          </div>
+          <div class="field full" style="display:flex; align-items:center; gap:10px;">
+            <label class="switch"><input type="checkbox" name="carryForwardEnabled" ${v.carryForwardEnabled!==false?"checked":""}><span class="slider"></span></label>
+            <label style="margin:0;">Carry forward to next day if not completed</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          ${item?`<button type="button" class="btn btn-danger" id="deleteFromModal">Delete</button>`:""}
+          <div class="spacer"></div>
+          <button type="button" class="btn" id="cancelItemModal">Cancel</button>
+          <button type="submit" class="btn btn-primary">${item?"Save changes":"Add item"}</button>
+        </div>
+      </form>
+    </div>
+  </div>`;
+  document.getElementById("modalRoot").innerHTML = html;
+
+  const overlay = document.getElementById("itemModalOverlay");
+  document.getElementById("closeItemModal").addEventListener("click", closeItemModal);
+  document.getElementById("cancelItemModal").addEventListener("click", closeItemModal);
+  overlay.addEventListener("click", e=>{ if(e.target===overlay) closeItemModal(); });
+  if(item) document.getElementById("deleteFromModal").addEventListener("click", ()=>{ closeItemModal(); confirmDeleteItem(item.id); });
+
+  let selectedOffsets = new Set(offsets);
+  document.querySelectorAll("#offsetChips .chip").forEach(chip=>{
+    chip.addEventListener("click", ()=>{
+      const raw = chip.dataset.offset;
+      const val = raw==="daily" ? "daily" : Number(raw);
+      if(selectedOffsets.has(val)){ selectedOffsets.delete(val); chip.classList.remove("active"); }
+      else { selectedOffsets.add(val); chip.classList.add("active"); }
+    });
+  });
+
+  // auto-suggest estimated days
+  const form = document.getElementById("itemForm");
+  form.elements.startDate.addEventListener("change", autoSuggestDays);
+  form.elements.deadline.addEventListener("change", autoSuggestDays);
+  function autoSuggestDays(){
+    if(form.elements.startDate.value && form.elements.deadline.value && !form.elements.estDays.value){
+      const d = daysBetweenYMD(form.elements.startDate.value, form.elements.deadline.value);
+      if(d!==null && d>=0) form.elements.estDays.value = d;
+    }
+  }
+
+  form.addEventListener("submit", e=>{
+    e.preventDefault();
+    const titleField = document.getElementById("f_title");
+    if(!form.elements.title.value.trim()){
+      titleField.classList.add("invalid");
+      form.elements.title.focus();
+      return;
+    }
+    titleField.classList.remove("invalid");
+
+    const data = {
+      title: form.elements.title.value.trim(),
+      description: form.elements.description.value.trim(),
+      category: form.elements.category.value,
+      priority: form.elements.priority.value,
+      status: form.elements.status.value,
+      completion: Math.max(0,Math.min(100, Number(form.elements.completion.value)||0)),
+      dateCreated: form.elements.dateCreated.value,
+      startDate: form.elements.startDate.value,
+      deadline: form.elements.deadline.value,
+      estDays: form.elements.estDays.value ? Number(form.elements.estDays.value) : "",
+      person: form.elements.person.value.trim(),
+      link: form.elements.link.value.trim(),
+      reminderDateTime: form.elements.reminderDateTime.value,
+      reminderOffsets: Array.from(selectedOffsets),
+      carryForwardEnabled: form.elements.carryForwardEnabled.checked
+    };
+    if(data.status === "Completed"){ data.completion = 100; }
+
+    if(item){
+      const wasCompleted = item.status === "Completed";
+      Object.assign(item, data);
+      if(data.status==="Completed" && !wasCompleted){ item.completedAt = Date.now(); item.preCompleteSnapshot = null; }
+      if(data.status!=="Completed" && wasCompleted){ item.completedAt = null; }
+      item.customReminderSent = false; // allow re-notify if datetime changed
+      toast("Item updated ✓");
+    } else {
+      DB.items.push(Object.assign({
+        id: uid("item"), isSample:false,
+        carryForwardCount:0, lastSeenDate:todayStr(),
+        completedAt: data.status==="Completed"?Date.now():null,
+        preCompleteSnapshot:null, isDeleted:false, deletedAt:null,
+        notified:[], customReminderSent:false, createdAt:Date.now()
+      }, data));
+      toast("Item added ✓");
+    }
+    saveDB();
+    closeItemModal();
+    render();
+  });
+}
+function closeItemModal(){
+  document.getElementById("modalRoot").innerHTML = "";
+  state.editingItemId = null;
+}
+
+/* =========================================================
+   DELETE / TRASH
+   ========================================================= */
+function confirmDeleteItem(id){
+  openConfirmModal("Delete this item?", "It will move to Recently Deleted, where you can restore it any time within 30 days.", ()=>{
+    const item = DB.items.find(i=>i.id===id);
+    if(item){ item.isDeleted = true; item.deletedAt = Date.now(); saveDB(); render(); toast("Item deleted — restore from Recently Deleted"); }
+  });
+}
+function confirmDeleteNote(id){
+  openConfirmModal("Delete this note?", "It will move to Recently Deleted, where you can restore it any time within 30 days.", ()=>{
+    const note = DB.notes.find(n=>n.id===id);
+    if(note){ note.isDeleted = true; note.deletedAt = Date.now(); saveDB(); render(); toast("Note deleted — restore from Recently Deleted"); }
+  });
+}
+function openConfirmModal(title, body, onConfirm){
+  const html = `
+  <div class="modal-overlay" id="confirmOverlay">
+    <div class="modal modal-sm" role="dialog" aria-modal="true">
+      <div class="modal-header"><h3>${title}</h3></div>
+      <p style="color:var(--ink-soft); font-size:13.5px;">${body}</p>
+      <div class="modal-footer">
+        <button class="btn" id="confirmCancel">Cancel</button>
+        <button class="btn btn-danger" id="confirmOk">Delete</button>
+      </div>
+    </div>
+  </div>`;
+  document.getElementById("modalRoot").innerHTML = html;
+  const overlay = document.getElementById("confirmOverlay");
+  const close = ()=>{ document.getElementById("modalRoot").innerHTML = ""; };
+  document.getElementById("confirmCancel").addEventListener("click", close);
+  overlay.addEventListener("click", e=>{ if(e.target===overlay) close(); });
+  document.getElementById("confirmOk").addEventListener("click", ()=>{ onConfirm(); close(); });
+}
+function openTrashModal(){
+  const deletedItems = DB.items.filter(i=>i.isDeleted);
+  const deletedNotes = DB.notes.filter(n=>n.isDeleted);
+  const html = `
+  <div class="modal-overlay" id="trashOverlay">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-header"><h3>Recently deleted</h3><button class="btn btn-icon btn-ghost" id="closeTrash">✕</button></div>
+      <p class="helper-text">Items and notes are kept here for 30 days before being permanently removed.</p>
+      ${deletedItems.length===0 && deletedNotes.length===0 ? `<p style="color:var(--ink-faint);">Nothing in the trash.</p>` : ""}
+      ${deletedItems.map(i=>`
+        <div class="item-card" style="padding:10px 12px;">
+          <div class="item-body"><div class="item-title">${escapeHtml(i.title)}</div>
+          <div class="helper-text">Deleted ${new Date(i.deletedAt).toLocaleString("en-SG")}</div></div>
+          <div class="item-actions">
+            <button class="btn btn-sm" data-restore-item="${i.id}">Restore</button>
+            <button class="btn btn-sm btn-danger" data-purge-item="${i.id}">Delete forever</button>
+          </div>
+        </div>`).join("")}
+      ${deletedNotes.map(n=>`
+        <div class="item-card" style="padding:10px 12px;">
+          <div class="item-body"><div class="item-title">📝 ${escapeHtml(n.title)}</div>
+          <div class="helper-text">Deleted ${new Date(n.deletedAt).toLocaleString("en-SG")}</div></div>
+          <div class="item-actions">
+            <button class="btn btn-sm" data-restore-note="${n.id}">Restore</button>
+            <button class="btn btn-sm btn-danger" data-purge-note="${n.id}">Delete forever</button>
+          </div>
+        </div>`).join("")}
+      <div class="modal-footer"><button class="btn" id="closeTrash2">Close</button></div>
+    </div>
+  </div>`;
+  document.getElementById("modalRoot").innerHTML = html;
+  const close = ()=>{ document.getElementById("modalRoot").innerHTML = ""; };
+  document.getElementById("closeTrash").addEventListener("click", close);
+  document.getElementById("closeTrash2").addEventListener("click", close);
+  document.getElementById("trashOverlay").addEventListener("click", e=>{ if(e.target.id==="trashOverlay") close(); });
+  document.querySelectorAll("[data-restore-item]").forEach(b=>b.addEventListener("click", ()=>{
+    const it = DB.items.find(i=>i.id===b.dataset.restoreItem); it.isDeleted=false; it.deletedAt=null; saveDB(); close(); render(); toast("Item restored ✓");
+  }));
+  document.querySelectorAll("[data-purge-item]").forEach(b=>b.addEventListener("click", ()=>{
+    DB.items = DB.items.filter(i=>i.id!==b.dataset.purgeItem); saveDB(); openTrashModal(); render();
+  }));
+  document.querySelectorAll("[data-restore-note]").forEach(b=>b.addEventListener("click", ()=>{
+    const n = DB.notes.find(n=>n.id===b.dataset.restoreNote); n.isDeleted=false; n.deletedAt=null; saveDB(); close(); render(); toast("Note restored ✓");
+  }));
+  document.querySelectorAll("[data-purge-note]").forEach(b=>b.addEventListener("click", ()=>{
+    DB.notes = DB.notes.filter(n=>n.id!==b.dataset.purgeNote); saveDB(); openTrashModal(); render();
+  }));
+}
+
+/* =========================================================
+   MISCELLANEOUS NOTES VIEW
+   ========================================================= */
+function renderMiscView(){
+  let notes = activeNotes();
+  if(state.search) notes = notes.filter(n => (n.title+n.notes).toLowerCase().includes(state.search.toLowerCase()));
+  notes.sort((a,b)=> (b.pinned - a.pinned) || (b.createdAt - a.createdAt));
+  return `
+  <div class="toolbar">
+    <button class="btn btn-primary" id="btnAddNote">＋ Add note</button>
+    <div class="spacer"></div>
+    <span class="helper-text">${notes.length} note${notes.length===1?"":"s"}</span>
+  </div>
+  ${notes.length===0 ? `<div class="empty-state"><div class="es-icon">📝</div><h3>No notes yet</h3><p>Jot down anything that isn't tied to a specific task.</p></div>` : `
+  <div class="notes-grid">
+    ${notes.map(n=>`
+      <div class="note-card ${n.pinned?"pinned":""}" data-id="${n.id}">
+        <div class="note-top">
+          <div>
+            <div class="note-title">${n.pinned?"📌 ":""}${escapeHtml(n.title)}</div>
+            <div class="note-date mono">${formatDMY(n.date)}</div>
+          </div>
+        </div>
+        <div class="note-body">${escapeHtml(n.notes)}</div>
+        <div class="item-actions" style="margin-top:10px;">
+          <button class="btn btn-sm" data-act="pin">${n.pinned?"Unpin":"Pin"}</button>
+          <button class="btn btn-sm" data-act="task">→ Make task</button>
+          <button class="btn btn-sm" data-act="edit">Edit</button>
+          <button class="btn btn-sm btn-danger" data-act="del">Delete</button>
+        </div>
+      </div>`).join("")}
+  </div>`}
+  `;
+}
+function attachMiscHandlers(){
+  const addBtn = document.getElementById("btnAddNote");
+  if(addBtn) addBtn.addEventListener("click", ()=>openNoteModal());
+  document.querySelectorAll(".note-card").forEach(card=>{
+    const id = card.dataset.id;
+    const note = DB.notes.find(n=>n.id===id);
+    card.querySelector('[data-act="pin"]').addEventListener("click", ()=>{ note.pinned=!note.pinned; saveDB(); render(); });
+    card.querySelector('[data-act="edit"]').addEventListener("click", ()=>openNoteModal(id));
+    card.querySelector('[data-act="del"]').addEventListener("click", ()=>confirmDeleteNote(id));
+    card.querySelector('[data-act="task"]').addEventListener("click", ()=>{
+      DB.items.push({
+        id: uid("item"), isSample:false, title: note.title, description: note.notes,
+        category:"Miscellaneous", priority:"Medium", dateCreated: todayStr(), startDate: todayStr(),
+        deadline:"", estDays:"", completion:0, status:"Not started", person:"", link:"",
+        reminderDateTime:"", reminderOffsets:DEFAULT_OFFSETS.slice(), carryForwardEnabled:true,
+        carryForwardCount:0, lastSeenDate:todayStr(), completedAt:null, preCompleteSnapshot:null,
+        isDeleted:false, deletedAt:null, notified:[], customReminderSent:false, createdAt:Date.now()
+      });
+      saveDB();
+      toast("Converted to task ✓ — see All Items");
+      state.view = "all";
+      render();
+    });
+  });
+}
+function openNoteModal(id){
+  const note = id ? DB.notes.find(n=>n.id===id) : null;
+  const v = note || {title:"", date:todayStr(), notes:"", pinned:false};
+  const html = `
+  <div class="modal-overlay" id="noteModalOverlay">
+    <div class="modal modal-sm" role="dialog" aria-modal="true">
+      <div class="modal-header"><h3>${note?"Edit note":"Add note"}</h3><button class="btn btn-icon btn-ghost" id="closeNoteModal">✕</button></div>
+      <form id="noteForm">
+        <div class="form-grid">
+          <div class="field full" id="f_ntitle"><label>Title <span class="req">*</span></label>
+            <input type="text" name="title" value="${escapeAttr(v.title)}"><div class="field-error">Please enter a title.</div></div>
+          <div class="field full"><label>Date</label><input type="date" name="date" value="${v.date}"></div>
+          <div class="field full"><label>Notes</label><textarea name="notes" style="min-height:110px;">${escapeHtml(v.notes)}</textarea></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" id="cancelNoteModal">Cancel</button>
+          <button type="submit" class="btn btn-primary">${note?"Save changes":"Add note"}</button>
+        </div>
+      </form>
+    </div>
+  </div>`;
+  document.getElementById("modalRoot").innerHTML = html;
+  const close = ()=>{ document.getElementById("modalRoot").innerHTML = ""; };
+  document.getElementById("closeNoteModal").addEventListener("click", close);
+  document.getElementById("cancelNoteModal").addEventListener("click", close);
+  document.getElementById("noteModalOverlay").addEventListener("click", e=>{ if(e.target.id==="noteModalOverlay") close(); });
+  document.getElementById("noteForm").addEventListener("submit", e=>{
+    e.preventDefault();
+    const form = e.target;
+    if(!form.elements.title.value.trim()){ document.getElementById("f_ntitle").classList.add("invalid"); return; }
+    if(note){
+      note.title = form.elements.title.value.trim(); note.date = form.elements.date.value; note.notes = form.elements.notes.value.trim();
+      toast("Note updated ✓");
+    } else {
+      DB.notes.push({id:uid("note"), isSample:false, title:form.elements.title.value.trim(), date:form.elements.date.value, notes:form.elements.notes.value.trim(), pinned:false, isDeleted:false, deletedAt:null, createdAt:Date.now()});
+      toast("Note added ✓");
+    }
+    saveDB(); close(); render();
+  });
+}
+
+/* =========================================================
+   CALENDAR VIEW
+   ========================================================= */
+function renderCalendarView(){
+  const t = todayStr();
+  if(!state.calMonth){ const [y,m] = t.split("-").map(Number); state.calMonth = {y, m}; }
+  const {y,m} = state.calMonth;
+  const first = new Date(Date.UTC(y, m-1, 1));
+  const startDow = (first.getUTCDay()+6)%7; // Monday=0
+  const daysInMonth = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const daysInPrevMonth = new Date(Date.UTC(y, m-1, 0)).getUTCDate();
+  const monthName = first.toLocaleString("en-GB",{month:"long", year:"numeric", timeZone:"UTC"});
+
+  const items = activeItems().filter(i=>i.deadline);
+  const cells = [];
+  for(let i=0;i<startDow;i++){ cells.push({day:daysInPrevMonth-startDow+1+i, other:true}); }
+  for(let d=1; d<=daysInMonth; d++){ cells.push({day:d, other:false, ymd:`${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`}); }
+  while(cells.length % 7 !== 0){ cells.push({day: cells.length - (startDow+daysInMonth) + 1, other:true}); }
+
+  const dows = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+  let grid = dows.map(d=>`<div class="cal-dow">${d}</div>`).join("");
+  grid += cells.map(c=>{
+    if(c.other) return `<div class="cal-cell other-month"><div class="cal-daynum mono">${c.day}</div></div>`;
+    const dayItems = items.filter(i=>i.deadline===c.ymd);
+    const isToday = c.ymd===t;
+    const isSel = state.calSelectedDay===c.ymd;
+    const dots = dayItems.slice(0,6).map(i=>`<span class="cal-dot" style="background:${urgencyColorVar(urgencyKey(i))}"></span>`).join("");
+    return `<div class="cal-cell ${isToday?"today":""} ${isSel?"selected":""}" data-ymd="${c.ymd}">
+      <div class="cal-daynum mono">${c.day}</div><div class="cal-dots">${dots}</div>
+    </div>`;
+  }).join("");
+
+  let dayPanel = "";
+  if(state.calSelectedDay){
+    const dayItems = items.filter(i=>i.deadline===state.calSelectedDay);
+    dayPanel = `<div class="section-heading"><h3>${formatDMY(state.calSelectedDay)}</h3></div>
+      <div class="item-list">${dayItems.length ? dayItems.map(renderItemCard).join("") : `<p style="color:var(--ink-faint);">No items due this day.</p>`}</div>`;
+  }
+
+  return `
+  <div class="cal-nav">
+    <button class="btn btn-icon" id="calPrev">←</button>
+    <h3>${monthName}</h3>
+    <button class="btn btn-icon" id="calNext">→</button>
+    <button class="btn btn-sm" id="calToday">Today</button>
+  </div>
+  <div class="cal-grid">${grid}</div>
+  ${dayPanel}
+  `;
+}
+function attachCalendarHandlers(){
+  document.getElementById("calPrev").addEventListener("click", ()=>{
+    let {y,m} = state.calMonth; m--; if(m<1){m=12;y--;} state.calMonth={y,m}; render();
+  });
+  document.getElementById("calNext").addEventListener("click", ()=>{
+    let {y,m} = state.calMonth; m++; if(m>12){m=1;y++;} state.calMonth={y,m}; render();
+  });
+  document.getElementById("calToday").addEventListener("click", ()=>{
+    const [y,m] = todayStr().split("-").map(Number); state.calMonth={y,m}; state.calSelectedDay=todayStr(); render();
+  });
+  document.querySelectorAll(".cal-cell[data-ymd]").forEach(cell=>{
+    cell.addEventListener("click", ()=>{ state.calSelectedDay = cell.dataset.ymd; render(); });
+  });
+  attachListHandlers();
+}
+
+/* =========================================================
+   REMINDERS / NOTIFICATIONS
+   ========================================================= */
+function requestNotifyPermission(){
+  if(!("Notification" in window)){
+    toast("This browser does not support notifications.", true);
+    return;
+  }
+  Notification.requestPermission().then(perm=>{
+    if(perm==="granted") toast("Notifications enabled — keep this tab open to receive them.");
+    else toast("Notifications not enabled.", true);
+  });
+}
+function fireNotification(title, body){
+  if("Notification" in window && Notification.permission==="granted"){
+    try{ new Notification(title, {body}); }catch(e){}
+  }
+}
+function checkReminders(){
+  const t = todayStr();
+  let changed = false;
+  activeItems().forEach(item=>{
+    if(item.status==="Completed" || !item.deadline) return;
+    const dr = daysRemaining(item);
+    const offsets = item.reminderOffsets || DEFAULT_OFFSETS;
+    item.notified = item.notified || [];
+    offsets.forEach(o=>{
+      if(o==="daily"){
+        if(dr<0){
+          const key = `daily-${t}`;
+          if(!item.notified.includes(key)){
+            fireNotification("Overdue: "+item.title, `Overdue by ${Math.abs(dr)} day(s). Deadline was ${formatDMY(item.deadline)}.`);
+            item.notified.push(key); changed = true;
+          }
+        }
+      } else if(typeof o === "number" && dr === o){
+        const key = `d${o}-${item.deadline}`;
+        if(!item.notified.includes(key)){
+          fireNotification(o===0?("Due today: "+item.title):("Due in "+o+"d: "+item.title), `Deadline: ${formatDMY(item.deadline)}`);
+          item.notified.push(key); changed = true;
+        }
+      }
+    });
+    if(item.reminderDateTime && !item.customReminderSent){
+      const target = new Date(item.reminderDateTime);
+      if(!isNaN(target) && new Date() >= target){
+        fireNotification("Reminder: "+item.title, item.description || `Deadline: ${formatDMY(item.deadline)}`);
+        item.customReminderSent = true; changed = true;
+      }
+    }
+  });
+  if(changed) saveDB();
+}
+
+/* =========================================================
+   .ICS EXPORT
+   ========================================================= */
+function icsEscape(s){ return String(s||"").replace(/[\\,;]/g, m=>"\\"+m).replace(/\n/g,"\\n"); }
+function downloadICS(id){
+  const item = DB.items.find(i=>i.id===id);
+  if(!item || !item.deadline){ toast("Add a deadline first to export a calendar event.", true); return; }
+  const dt = item.deadline.replace(/-/g,"");
+  const offsets = (item.reminderOffsets||DEFAULT_OFFSETS).filter(o=>typeof o==="number");
+  const alarms = offsets.map(o=>`BEGIN:VALARM\nACTION:DISPLAY\nDESCRIPTION:${icsEscape(item.title)}\nTRIGGER:-P${o}D\nEND:VALARM`).join("\n");
+  const ics = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Work Project Tracker//EN\nBEGIN:VEVENT\nUID:${item.id}@worktracker\nDTSTAMP:${dt}T000000Z\nDTSTART;VALUE=DATE:${dt}\nSUMMARY:${icsEscape(item.title)}\nDESCRIPTION:${icsEscape(item.description)}\n${alarms}\nEND:VEVENT\nEND:VCALENDAR`;
+  const blob = new Blob([ics], {type:"text/calendar"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = (item.title.replace(/[^a-z0-9]+/gi,"_").slice(0,40)||"event") + ".ics";
+  document.body.appendChild(a); a.click(); a.remove();
+  toast("Calendar file downloaded — open it to add to your phone/computer calendar.");
+}
+
+/* =========================================================
+   EXPORT / IMPORT
+   ========================================================= */
+function exportJSON(){
+  const blob = new Blob([JSON.stringify(DB, null, 2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "work-tracker-backup-"+todayStr()+".json";
+  document.body.appendChild(a); a.click(); a.remove();
+  toast("Data exported as JSON ✓");
+}
+function csvEscape(s){ s=String(s??""); return /[",\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s; }
+function exportCSV(){
+  const cols = ["title","description","category","priority","status","completion","dateCreated","startDate","deadline","estDays","person","link","carryForwardCount"];
+  const rows = [cols.join(",")];
+  activeItems().forEach(i=>{ rows.push(cols.map(c=>csvEscape(i[c])).join(",")); });
+  const blob = new Blob([rows.join("\n")], {type:"text/csv"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "work-tracker-items-"+todayStr()+".csv";
+  document.body.appendChild(a); a.click(); a.remove();
+  toast("Data exported as CSV ✓");
+}
+function openExportModal(){
+  const html = `
+  <div class="modal-overlay" id="exportOverlay">
+    <div class="modal modal-sm" role="dialog" aria-modal="true">
+      <div class="modal-header"><h3>Export data</h3><button class="btn btn-icon btn-ghost" id="closeExport">✕</button></div>
+      <p class="helper-text">JSON includes everything (items, notes, settings) and can be re-imported later. CSV includes items only, for spreadsheets.</p>
+      <div class="modal-footer" style="justify-content:flex-start;">
+        <button class="btn btn-primary" id="expJSON">⇩ Export JSON (full backup)</button>
+        <button class="btn" id="expCSV">⇩ Export CSV (items)</button>
+      </div>
+    </div>
+  </div>`;
+  document.getElementById("modalRoot").innerHTML = html;
+  const close = ()=>{ document.getElementById("modalRoot").innerHTML=""; };
+  document.getElementById("closeExport").addEventListener("click", close);
+  document.getElementById("exportOverlay").addEventListener("click", e=>{ if(e.target.id==="exportOverlay") close(); });
+  document.getElementById("expJSON").addEventListener("click", ()=>{ exportJSON(); close(); });
+  document.getElementById("expCSV").addEventListener("click", ()=>{ exportCSV(); close(); });
+}
+function importJSONFile(file){
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try{
+      const data = JSON.parse(e.target.result);
+      if(!data.items || !Array.isArray(data.items)) throw new Error("bad format");
+      openConfirmImport(data);
+    }catch(err){
+      toast("Import failed — that file doesn't look like a valid backup.", true);
+    }
+  };
+  reader.readAsText(file);
+}
+function openConfirmImport(data){
+  const html = `
+  <div class="modal-overlay" id="impOverlay">
+    <div class="modal modal-sm" role="dialog" aria-modal="true">
+      <div class="modal-header"><h3>Import data</h3></div>
+      <p style="font-size:13.5px; color:var(--ink-soft);">Found ${data.items.length} item(s) and ${data.notes?data.notes.length:0} note(s). Choose how to import:</p>
+      <div class="modal-footer" style="justify-content:flex-start; flex-wrap:wrap;">
+        <button class="btn btn-primary" id="mergeBtn">Merge with existing data</button>
+        <button class="btn btn-danger" id="replaceBtn">Replace all existing data</button>
+        <button class="btn" id="cancelImp">Cancel</button>
+      </div>
+    </div>
+  </div>`;
+  document.getElementById("modalRoot").innerHTML = html;
+  const close = ()=>{ document.getElementById("modalRoot").innerHTML=""; };
+  document.getElementById("cancelImp").addEventListener("click", close);
+  document.getElementById("mergeBtn").addEventListener("click", ()=>{
+    const existingIds = new Set(DB.items.map(i=>i.id));
+    data.items.forEach(i=>{ if(!existingIds.has(i.id)) DB.items.push(i); });
+    const existingNoteIds = new Set(DB.notes.map(n=>n.id));
+    (data.notes||[]).forEach(n=>{ if(!existingNoteIds.has(n.id)) DB.notes.push(n); });
+    saveDB(); close(); render(); toast("Data merged ✓");
+  });
+  document.getElementById("replaceBtn").addEventListener("click", ()=>{
+    DB = data; if(!DB.settings) DB.settings={theme:"light"};
+    saveDB(); applyTheme(); close(); render(); toast("Data replaced ✓");
+  });
+}
+
+/* =========================================================
+   THEME
+   ========================================================= */
+function applyTheme(){
+  document.documentElement.setAttribute("data-theme", DB.settings.theme || "light");
+}
+function toggleTheme(){
+  DB.settings.theme = (DB.settings.theme==="dark") ? "light" : "dark";
+  applyTheme(); saveDB(); render();
+}
+
+/* =========================================================
+   UTIL
+   ========================================================= */
+function escapeHtml(s){
+  return String(s??"").replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+}
+function escapeAttr(s){ return escapeHtml(s); }
+
+/* =========================================================
+   CLEAR SAMPLE DATA
+   ========================================================= */
+function clearSampleData(){
+  openConfirmModal("Clear sample data?", "This removes the starter example items and notes. Anything you've added yourself is untouched.", ()=>{
+    DB.items = DB.items.filter(i=>!i.isSample);
+    DB.notes = DB.notes.filter(n=>!n.isSample);
+    saveDB(); render(); toast("Sample data cleared ✓");
+  });
+}
+
+/* =========================================================
+   GLOBAL EVENT WIRING
+   ========================================================= */
+function wireGlobalEvents(){
+  document.getElementById("btnAddItem").addEventListener("click", ()=>openItemModal());
+  document.getElementById("btnTheme").addEventListener("click", toggleTheme);
+  document.getElementById("btnNotify").addEventListener("click", requestNotifyPermission);
+  document.getElementById("btnTrash").addEventListener("click", openTrashModal);
+  document.getElementById("btnExport").addEventListener("click", openExportModal);
+  document.getElementById("btnImport").addEventListener("click", ()=>document.getElementById("importFile").click());
+  document.getElementById("btnClearSample").addEventListener("click", clearSampleData);
+  document.getElementById("importFile").addEventListener("change", e=>{
+    if(e.target.files[0]) importJSONFile(e.target.files[0]);
+    e.target.value = "";
+  });
+  document.getElementById("btnHamburger").addEventListener("click", ()=>{
+    document.getElementById("sidebar").classList.toggle("open");
+  });
+  let searchDebounce;
+  document.getElementById("searchInput").addEventListener("input", e=>{
+    clearTimeout(searchDebounce);
+    const val = e.target.value;
+    searchDebounce = setTimeout(()=>{ state.search = val; render(); }, 150);
+  });
+}
+
+/* =========================================================
+   INIT
+   ========================================================= */
+function init(){
+  loadDB();
+  applyTheme();
+  runCarryForward();
+  purgeOldTrash();
+  saveDB();
+  wireGlobalEvents();
+  render();
+  checkReminders();
+  setInterval(checkReminders, 60000);
+}
+document.addEventListener("DOMContentLoaded", init);
+})();
+</script>
+</body>
+</html>
