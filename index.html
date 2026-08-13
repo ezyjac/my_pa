@@ -429,8 +429,8 @@ let DB = null; // {items:[], notes:[], settings:{}}
 let state = {
   view: "today",
   search: "",
-  filterCategory: new Set(),
-  filterPriority: new Set(),
+  filterCategory: "",
+  filterPriority: "",
   filterStatus: new Set(),
   sort: "deadline",
   calMonth: null, // {y,m}
@@ -709,8 +709,8 @@ function matchesSearch(item, q){
          (item.person||"").toLowerCase().includes(q);
 }
 function matchesFilters(item){
-  if(state.filterCategory.size && !state.filterCategory.has(item.category)) return false;
-  if(state.filterPriority.size && !state.filterPriority.has(item.priority)) return false;
+  if(state.filterCategory && item.category !== state.filterCategory) return false;
+  if(state.filterPriority && item.priority !== state.filterPriority) return false;
   if(state.filterStatus.size && !state.filterStatus.has(item.status)) return false;
   return true;
 }
@@ -825,14 +825,18 @@ function renderDashboard(){
    TOOLBAR
    ========================================================= */
 function renderToolbar(){
+  const catOptions = CATEGORIES.map(c=>`<option value="${c}" ${state.filterCategory===c?"selected":""}>${c}</option>`).join("");
+  const prOptions = PRIORITIES.map(p=>`<option value="${p}" ${state.filterPriority===p?"selected":""}>${p}</option>`).join("");
   return `
   <div class="toolbar">
-    <div class="chip-group" id="catChips">
-      ${CATEGORIES.map(cat=>`<button class="chip ${state.filterCategory.has(cat)?"active":""}" data-type="cat" data-val="${cat}">${cat}</button>`).join("")}
-    </div>
-    <div class="chip-group" id="prChips">
-      ${PRIORITIES.map(p=>`<button class="chip ${state.filterPriority.has(p)?"active":""}" data-type="pr" data-val="${p}">${p}</button>`).join("")}
-    </div>
+    <select class="filter-select" id="catSelect">
+      <option value="" ${state.filterCategory===""?"selected":""}>All categories</option>
+      ${catOptions}
+    </select>
+    <select class="filter-select" id="prSelect">
+      <option value="" ${state.filterPriority===""?"selected":""}>All priorities</option>
+      ${prOptions}
+    </select>
     <div class="spacer"></div>
     <select class="filter-select" id="sortSelect">
       <option value="deadline" ${state.sort==="deadline"?"selected":""}>Sort: Deadline</option>
@@ -843,20 +847,10 @@ function renderToolbar(){
   </div>`;
 }
 function attachToolbarHandlers(){
-  document.querySelectorAll('.chip[data-type="cat"]').forEach(el=>{
-    el.addEventListener("click", ()=>{
-      const v = el.dataset.val;
-      state.filterCategory.has(v) ? state.filterCategory.delete(v) : state.filterCategory.add(v);
-      render();
-    });
-  });
-  document.querySelectorAll('.chip[data-type="pr"]').forEach(el=>{
-    el.addEventListener("click", ()=>{
-      const v = el.dataset.val;
-      state.filterPriority.has(v) ? state.filterPriority.delete(v) : state.filterPriority.add(v);
-      render();
-    });
-  });
+  const catSel = document.getElementById("catSelect");
+  if(catSel) catSel.addEventListener("change", e=>{ state.filterCategory = e.target.value; render(); });
+  const prSel = document.getElementById("prSelect");
+  if(prSel) prSel.addEventListener("change", e=>{ state.filterPriority = e.target.value; render(); });
   const sortSel = document.getElementById("sortSelect");
   if(sortSel) sortSel.addEventListener("change", e=>{ state.sort = e.target.value; render(); });
 }
